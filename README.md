@@ -36,3 +36,14 @@ It supports YouTube song downloads, TikTok/Facebook video downloads, and AI vide
 ---
 
 ## 📁 Folder Structure
+---
+
+## 🧑‍💻 Credits
+- Developer: **Isuru Dayan**
+- Base: **Baileys WhatsApp Library**
+- AI Tools: **OpenAI / FFmpeg / Node APIs**
+
+---
+
+## 📜 License
+This project is licensed under the MIT License.
