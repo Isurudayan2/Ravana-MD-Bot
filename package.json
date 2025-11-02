@@ -1,1 +1,22 @@
-
+{
+  "name": "ravana-md-bot",
+  "version": "1.0.0",
+  "description": "A multi-purpose WhatsApp MD bot with video, song, TikTok, Facebook downloads and AI video generation.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Ravana-MD",
+  "license": "MIT",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.6.0",
+    "node-fetch": "^3.3.2",
+    "ytdl-core": "^4.11.5",
+    "tiktok-scraper": "^1.4.36",
+    "facebook-video-downloader": "^1.0.0",
+    "openai": "^4.0.0",
+    "qrcode-terminal": "^0.12.0",
+    "fluent-ffmpeg": "^2.1.2"
+  }
+}
