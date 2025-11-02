@@ -1,60 +1,36 @@
-
-import makeWASocket, { useMultiFileAuthState, DisconnectReason } from "@whiskeysockets/baileys";
+import { 
+  default: makeWASocket,
+  useSingleFileAuthState,
+  DisconnectReason
+} from "@whiskeysockets/baileys";
+import { Boom } from "@hapi/boom";
 import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 
-// plugin folder auto-load
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const pluginsPath = path.join(__dirname, "plugins");
-
-// plugin loader
-let plugins = [];
-fs.readdirSync(pluginsPath).forEach(file => {
-  if (file.endsWith(".js")) {
-    import(`./plugins/${file}`).then(module => {
-      plugins.push(module.default);
-      console.log(`✅ Plugin loaded: ${file}`);
-    });
-  }
-});
+const { state, saveState } = useSingleFileAuthState("./auth_info.json");
 
 async function connectToWhatsApp() {
-  const { state, saveCreds } = await useMultiFileAuthState("session");
-  const sock = makeWASocket({
-    auth: state,
-    printQRInTerminal: false, // no QR print
-    syncFullHistory: false,
-  });
+    const sock = makeWASocket({
+        auth: state,
+        printQRInTerminal: true
+    });
 
-  sock.ev.on("connection.update", (update) => {
-    const { connection, lastDisconnect } = update;
-    if (connection === "open") {
-      console.log("✅ Ravana-MD-Bot Connected to WhatsApp!");
-    } else if (connection === "close") {
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-      console.log("❌ Connection closed. Reconnecting...", shouldReconnect);
-      if (shouldReconnect) connectToWhatsApp();
-    }
-  });
+    sock.ev.on('creds.update', saveState);
 
-  sock.ev.on("creds.update", saveCreds);
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
+        if(connection === 'close') {
+            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+            console.log('connection closed due to ', lastDisconnect.error, ', reconnecting ', shouldReconnect);
+            if(shouldReconnect) connectToWhatsApp();
+        } else if(connection === 'open') {
+            console.log('Connected to WhatsApp');
+        }
+    });
 
-  // Message handler
-  sock.ev.on("messages.upsert", async (m) => {
-    const msg = m.messages[0];
-    if (!msg.message || msg.key.fromMe) return;
-    const from = msg.key.remoteJid;
-    const text = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
-
-    console.log("📩 Received:", text, "from", from);
-
-    for (const plugin of plugins) {
-      if (await plugin(sock, msg, text)) return;
-    }
-  });
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+        console.log('New message:', messages[0].message);
+        // Call your plugin logic here
+    });
 }
 
 connectToWhatsApp();
